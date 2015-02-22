@@ -22,7 +22,6 @@
 		847D697A1751D5AE004E09C2 /* relaunch in Resources */ = {isa = PBXBuildFile; fileRef = 847D69791751D5AE004E09C2 /* relaunch */; };
 		84E812301745D11A000D9A74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84E8122F1745D11A000D9A74 /* Cocoa.framework */; };
 		84E8123A1745D11A000D9A74 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 84E812381745D11A000D9A74 /* InfoPlist.strings */; };
-		84E812461745D11A000D9A74 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84E812451745D11A000D9A74 /* SenTestingKit.framework */; };
 		84E812471745D11A000D9A74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84E8122F1745D11A000D9A74 /* Cocoa.framework */; };
 		84E8124A1745D11A000D9A74 /* MoonShine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84E8122C1745D11A000D9A74 /* MoonShine.framework */; };
 		84E812501745D11A000D9A74 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 84E8124E1745D11A000D9A74 /* InfoPlist.strings */; };
@@ -101,7 +100,6 @@
 		84E812391745D11A000D9A74 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		84E8123B1745D11A000D9A74 /* MoonShine-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MoonShine-Prefix.pch"; sourceTree = "<group>"; };
 		84E812441745D11A000D9A74 /* MoonShineTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoonShineTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
-		84E812451745D11A000D9A74 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
 		84E8124D1745D11A000D9A74 /* MoonShineTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MoonShineTests-Info.plist"; sourceTree = "<group>"; };
 		84E8124F1745D11A000D9A74 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		84E8126D1745D183000D9A74 /* MoonShine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MoonShine.h; sourceTree = "<group>"; };
@@ -162,7 +160,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				84E812461745D11A000D9A74 /* SenTestingKit.framework in Frameworks */,
 				84E812471745D11A000D9A74 /* Cocoa.framework in Frameworks */,
 				84E8124A1745D11A000D9A74 /* MoonShine.framework in Frameworks */,
 			);
@@ -229,7 +226,6 @@
 				84E812C11745D8A3000D9A74 /* Security.framework */,
 				84E8129F1745D311000D9A74 /* SystemConfiguration.framework */,
 				84E8122F1745D11A000D9A74 /* Cocoa.framework */,
-				84E812451745D11A000D9A74 /* SenTestingKit.framework */,
 				84E812311745D11A000D9A74 /* Other Frameworks */,
 			);
 			name = Frameworks;
@@ -398,7 +394,7 @@
 			name = MoonShineTests;
 			productName = MoonShineTests;
 			productReference = 84E812441745D11A000D9A74 /* MoonShineTests.octest */;
-			productType = "com.apple.product-type.bundle";
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -407,6 +403,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = MSH;
+				LastTestingUpgradeCheck = 0610;
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = CodaFi;
 			};
@@ -627,12 +624,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				FRAMEWORK_SEARCH_PATHS = "\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
+					"$(inherited)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MoonShine/MoonShine-Prefix.pch";
 				INFOPLIST_FILE = "MoonShineTests/MoonShineTests-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WRAPPER_EXTENSION = octest;
 			};
 			name = Debug;
 		};
@@ -640,12 +639,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				FRAMEWORK_SEARCH_PATHS = "\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
+					"$(inherited)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MoonShine/MoonShine-Prefix.pch";
 				INFOPLIST_FILE = "MoonShineTests/MoonShineTests-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WRAPPER_EXTENSION = octest;
 			};
 			name = Release;
 		};
