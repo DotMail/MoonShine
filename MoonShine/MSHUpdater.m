@@ -6,8 +6,11 @@
 //  Copyright (c) 2013 CodaFi. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
+#import <Security/Security.h>
+
 #import "MSHUpdater.h"
-#import "AFNetworking.h"
+#import "AFHTTPRequestOperation.h"
 #import "SUUnarchiver.h"
 #import "SUHost.h"
 #import "SUStandardVersionComparator.h"
@@ -15,11 +18,18 @@
 
 NSString *const MSHUpdaterUpdateAvailableNotification = @"DMUpdaterUpdateAvailableNotification";
 
+/// The states the update driver can be in.
 typedef NS_ENUM(NSUInteger, DMUpdaterState) {
+	/// The driver is currently inactive.
 	DMUpdaterStateIdle,
+	/// The updater is currently checker for updates.
 	DMUpdaterStateChecking,
+	/// The updater is currently downloading the update binary.
 	DMUpdaterStateFetchingUpdate,
-	DMUpdaterStateRecievedUpdate,
+	/// The updater has received the update binary and is ready to install it.
+	DMUpdaterStateReceivedUpdate,
+	/// The updater has received permission to install the binary and is
+	/// about to restart the application to install it.
 	DMUpdaterStateInstallingUpdate,
 };
 
@@ -74,11 +84,14 @@ typedef NS_ENUM(NSUInteger, DMUpdaterState) {
 - (void)checkForUpdates {
 	if (self.state == DMUpdaterStateIdle) {
 		self.state = DMUpdaterStateChecking;
-		AFHTTPRequestOperationManager *manager = AFHTTPRequestOperationManager.manager;
-		AFJSONResponseSerializer *serializer = [AFJSONResponseSerializer serializerWithReadingOptions:0];
-		serializer.acceptableContentTypes = [serializer.acceptableContentTypes setByAddingObject:@"text/plain"];
-		manager.responseSerializer = serializer;
-		[manager GET:@"https://raw.github.com/DotMail/Luna/master/latest.json" parameters:nil success:^(AFHTTPRequestOperation *operation, NSDictionary *JSON) {
+		NSURL *url = [NSURL URLWithString:@"https://raw.github.com/DotMail/Luna/master/latest.json"];
+		NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+			NSError *JSONError = nil;
+			NSDictionary *JSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:&JSONError];
+			if (JSONError) {
+				return [self bailOut];
+			}
+			
 			if ([JSON isKindOfClass:NSDictionary.class]) {
 				NSString *installURLString = JSON[@"URL"];
 				NSComparisonResult compareResult = [SUStandardVersionComparator.defaultComparator compareVersion:NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"] toVersion:JSON[@"Version"]];
@@ -98,12 +111,12 @@ typedef NS_ENUM(NSUInteger, DMUpdaterState) {
 								free(updateTempPathCpy);
 								self.downloadFolder = [NSURL fileURLWithPath:tempInstallPath];
 								NSURL *downloadFileURL = [self.downloadFolder URLByAppendingPathComponent:installURLString.lastPathComponent];
-								NSOutputStream *stream = [[NSOutputStream alloc]initWithURL:downloadFileURL append:NO];
-								AFHTTPRequestOperation *request = [[AFHTTPRequestOperation alloc]initWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:installURLString]]];
+								NSOutputStream *stream = [[NSOutputStream alloc] initWithURL:downloadFileURL append:NO];
+								AFHTTPRequestOperation *request = [[AFHTTPRequestOperation alloc] initWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:installURLString]]];
 								@weakify(self);
 								[request setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
 									@strongify(self);
-									self.state = DMUpdaterStateRecievedUpdate;
+									self.state = DMUpdaterStateReceivedUpdate;
 									SUHost *host = [[SUHost alloc] initWithBundle:NSBundle.mainBundle];
 									SUUnarchiver *unarchiver = [SUUnarchiver unarchiverForPath:downloadFileURL.path updatingHost:host];
 									[unarchiver setCompletion:^(BOOL success) {
@@ -147,15 +160,14 @@ typedef NS_ENUM(NSUInteger, DMUpdaterState) {
 			} else {
 				[self bailOut];
 			}
-		} failure:^(AFHTTPRequestOperation *operation, NSError *error) { [self bailOut]; }];
+		}];
+		[task resume];
 	}
 }
 
 // Ripped from Sparkle.  See:
 // https://github.com/andymatuschak/Sparkle/blob/0ed83cf9f2eeb425d4fdd141c01a29d843970c20/SUCodeSigningVerifier.m
-- (void)verifyCodeSignatureOfBundle:(NSBundle *)newBundle completion:(void(^)(BOOL))completion {
-	if (SecCodeCopySelf == NULL) return completion(NO);
-	
+- (void)verifyCodeSignatureOfBundle:(NSBundle *)newBundle completion:(void(^)(BOOL))completion {	
 	OSStatus result = 0;
 	SecRequirementRef requirement = NULL;
 	SecStaticCodeRef staticCode = NULL;
@@ -196,7 +208,7 @@ finally:
 }
 
 - (BOOL)installUpdateIfNeeded {
-	if (self.state == DMUpdaterStateRecievedUpdate) {
+	if (self.state == DMUpdaterStateReceivedUpdate) {
 		if (self.downloadFolder != nil) {
 			self.state = DMUpdaterStateInstallingUpdate;
 			SUHost *host = [[SUHost alloc] initWithBundle:NSBundle.mainBundle];
@@ -208,7 +220,7 @@ finally:
 }
 
 - (void)bailOut {
-	self.releaseNotes = nil;
+	self.releaseNotes = @"";
 	if (self.downloadFolder != nil) {
 		NSError *error = nil;
 		if (![NSFileManager.defaultManager removeItemAtURL:self.downloadFolder error:&error]) {

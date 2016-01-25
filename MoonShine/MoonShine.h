@@ -6,8 +6,8 @@
 //  Copyright (c) 2013 CodaFi. All rights reserved.
 //
 
-#ifndef MoonShine_MoonShine_h
-#define MoonShine_MoonShine_h
+#ifndef MOONSHINE_MOONSHINE_H
+#define MOONSHINE_MOONSHINE_H
 
 #import <MoonShine/MSHUpdater.h>
 
